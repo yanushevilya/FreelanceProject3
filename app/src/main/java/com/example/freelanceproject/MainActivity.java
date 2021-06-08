@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
 
         numbersList.setHasFixedSize(true);
 
-        numbersAdapter = new NumbersAdapter(100);
+        numbersAdapter = new NumbersAdapter(100); // передаем адаптеру количество элементов списка (ViewHolder)
         numbersList.setAdapter(numbersAdapter);
     }
 }
