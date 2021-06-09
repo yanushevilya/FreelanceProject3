@@ -12,15 +12,27 @@ import java.util.List;
 
 public class GitUserAdapter  extends RecyclerView.Adapter<GitUserAdapter.ViewHolder>{
 
+
+    //  // ОБРАБОТКА НАЖАТИЯ делаем слушатель для нажатия на Холдер
+    interface OnGitUserClickListener{
+        // этот метод ждет выранный Холдер и его позицию
+        void onGitUserClick(GitUser gitUser, int position);
+    }
+
+    // // ОБРАБОТКА НАЖАТИЯ переменная для хранения объекта этого интерфейса
+    private final OnGitUserClickListener onClickListener;
+
     // 2. объявили константы
     private final LayoutInflater inflater;
     private final List<GitUser> gitUsers;
 
-
-    GitUserAdapter(Context context, List<GitUser> gitUsers) {  // 3. в качестве параметров передаем Context - это активити, из которого вызывается адаптер и в котором будет отображаться наш RecyclerView
+    // 3. в качестве параметров передаем Context - это активити, из которого вызывается адаптер и в котором будет отображаться наш RecyclerView
+    //  // ОБРАБОТКА НАЖАТИЯ также передаем OnGitUserClickListener
+    GitUserAdapter(Context context, List<GitUser> gitUsers, OnGitUserClickListener onClickListener) {
         // 4. инициализируем наши константы
         this.gitUsers = gitUsers;
         this.inflater = LayoutInflater.from(context);
+        this.onClickListener = onClickListener;  // ОБРАБОТКА НАЖАТИЯ
     }
 
     // 5. методы Адаптера:
@@ -39,6 +51,16 @@ public class GitUserAdapter  extends RecyclerView.Adapter<GitUserAdapter.ViewHol
         holder.idView.setText(gitUser.getId());
         holder.loginView.setText(gitUser.getLogin());
         holder.changesCountView.setText(gitUser.getChangesCount());
+
+        // ОБРАБОТКА НАЖАТИЯ
+        holder.itemView.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v)
+            {
+                // вызываем метод слушателя, передавая ему данные
+                onClickListener.onGitUserClick(gitUser, position);
+            }
+        });
     }
 
     @Override

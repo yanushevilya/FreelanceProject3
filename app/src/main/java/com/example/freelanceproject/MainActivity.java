@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
@@ -62,6 +64,49 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // класс для запуска в отдельном потоке задачи подключения по URL и получения JSON
+    // (тап по Холдеру и получение репозиториев пользователя)
+    class UserQueryTask extends AsyncTask<URL, Void, String> {
+
+        @Override
+        protected String doInBackground(URL... urls) {
+            String response = null;
+            // 1. делаем запрос по URL и в ответ получаем JSON, который записываем в переменную - response
+            try {
+                response = getResponseFromURL(urls[0]);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return response;
+        }
+
+        // здесь надо распарсить полученный в response JSON и поместить данные из него в наш массив listGitUser
+        @Override
+        protected void onPostExecute(String response) {
+            try {
+                JSONArray jsonArray = new JSONArray(response);
+
+                // 2. считываем данные из полученного JSON и сразу записываем их в наш List для адаптера RecyclerView
+                String repo = "";
+                for (int i = 0; i < jsonArray.length(); i++ ) {
+                    repo = jsonArray.getJSONObject(i).get("html_url").toString();
+                    System.out.println(repo);
+
+                }
+
+                Context context = MainActivity.this;
+                Class destinationActivity = DetailsActivity.class;
+                Intent detailsActivityIntent = new Intent(context, destinationActivity);
+                detailsActivityIntent.putExtra(Intent.EXTRA_TEXT, repo);
+                startActivity(detailsActivityIntent);
+
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,8 +120,23 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerViewGitUsers.setHasFixedSize(true);
 
+        // ОБРАБОТКА НАЖАТИЯ
+        // определяем слушателя нажатия элемента в списке
+        GitUserAdapter.OnGitUserClickListener gitUserClickListener = new GitUserAdapter.OnGitUserClickListener() {
+            @Override
+            public void onGitUserClick(GitUser gitUser, int position) {
+
+                try {
+                    new UserQueryTask().execute(new URL("https://api.github.com/users/mojombo/repos"));
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+
         // помещаем наш List в адаптер для RecyclerView
-        gitUserAdapter = new GitUserAdapter(this, listGitUser); //
+        gitUserAdapter = new GitUserAdapter(this, listGitUser, gitUserClickListener); //
         recyclerViewGitUsers.setAdapter(gitUserAdapter);
     }
 
@@ -87,22 +147,5 @@ public class MainActivity extends AppCompatActivity {
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
-
-//        listGitUser.add(new GitUser("Andy", "1", "4"));
-//        listGitUser.add(new GitUser("Bob", "2", "3"));
-//        listGitUser.add(new GitUser("Den", "3", "0"));
-//        listGitUser.add(new GitUser("Ashley", "4", "1"));
-//        listGitUser.add(new GitUser("Freddy", "5", "1"));
-//        listGitUser.add(new GitUser("Garry", "6", "2"));
-//        listGitUser.add(new GitUser("John", "7", "2"));
-//        listGitUser.add(new GitUser("Sully", "8", "2"));
-//        listGitUser.add(new GitUser("Rob", "9", "2"));
-//        listGitUser.add(new GitUser("Pauel", "10", "2"));
-//        listGitUser.add(new GitUser("Penny", "11", "2"));
-//        listGitUser.add(new GitUser("Ronald", "12", "2"));
-//        listGitUser.add(new GitUser("George", "13", "2"));
-//        listGitUser.add(new GitUser("Stefany", "14", "2"));
-//        listGitUser.add(new GitUser("Steev", "15", "2"));
-//        listGitUser.add(new GitUser("Brenda", "16", "2"));
     }
 }
