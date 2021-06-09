@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.SyncStateContract;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,7 +26,12 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerViewGitUsers;
     private GitUserAdapter gitUserAdapter;
     private ArrayList<GitUser> listGitUser = new ArrayList<GitUser>();
+    private static ArrayList<UserRepos> userReposList = new ArrayList<UserRepos>();
     private String url = "https://api.github.com/users";
+
+    public static ArrayList<UserRepos> getUserReposList() {
+        return userReposList;
+    }
 
     // класс для запуска в отдельном потоке задачи подключения по URL и получения JSON
     class GitQueryTask extends AsyncTask<URL, Void, String> {
@@ -86,20 +92,19 @@ public class MainActivity extends AppCompatActivity {
             try {
                 JSONArray jsonArray = new JSONArray(response);
 
+                Context context = MainActivity.this;
+                Class destinationActivity = DetailsActivity.class;
+                Intent detailsActivityIntent = new Intent(context, destinationActivity);
+                startActivity(detailsActivityIntent);
+
+
                 // 2. считываем данные из полученного JSON и сразу записываем их в наш List для адаптера RecyclerView
                 String repo = "";
                 for (int i = 0; i < jsonArray.length(); i++ ) {
                     repo = jsonArray.getJSONObject(i).get("html_url").toString();
+                    userReposList.add(new UserRepos(repo));
                     System.out.println(repo);
-
                 }
-
-                Context context = MainActivity.this;
-                Class destinationActivity = DetailsActivity.class;
-                Intent detailsActivityIntent = new Intent(context, destinationActivity);
-                detailsActivityIntent.putExtra(Intent.EXTRA_TEXT, repo);
-                startActivity(detailsActivityIntent);
-
 
             } catch (JSONException e) {
                 e.printStackTrace();
