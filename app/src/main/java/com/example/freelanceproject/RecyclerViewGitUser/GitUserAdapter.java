@@ -1,4 +1,4 @@
-package com.example.freelanceproject;
+package com.example.freelanceproject.RecyclerViewGitUser;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -8,13 +8,15 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.freelanceproject.R;
+
 import java.util.List;
 
 public class GitUserAdapter  extends RecyclerView.Adapter<GitUserAdapter.ViewHolder>{
 
 
     //  // ОБРАБОТКА НАЖАТИЯ делаем слушатель для нажатия на Холдер
-    interface OnGitUserClickListener{
+    public interface OnGitUserClickListener{
         // этот метод ждет выранный Холдер и его позицию
         void onGitUserClick(GitUser gitUser, int position);
     }
@@ -28,7 +30,7 @@ public class GitUserAdapter  extends RecyclerView.Adapter<GitUserAdapter.ViewHol
 
     // 3. в качестве параметров передаем Context - это активити, из которого вызывается адаптер и в котором будет отображаться наш RecyclerView
     //  // ОБРАБОТКА НАЖАТИЯ также передаем OnGitUserClickListener
-    GitUserAdapter(Context context, List<GitUser> gitUsers, OnGitUserClickListener onClickListener) {
+    public GitUserAdapter(Context context, List<GitUser> gitUsers, OnGitUserClickListener onClickListener) {
         // 4. инициализируем наши константы
         this.gitUsers = gitUsers;
         this.inflater = LayoutInflater.from(context);

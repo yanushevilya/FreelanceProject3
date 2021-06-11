@@ -1,4 +1,4 @@
-package com.example.freelanceproject;
+package com.example.freelanceproject.RecyclerViewUserRepos;
 
 public class UserRepos {
     String repo;

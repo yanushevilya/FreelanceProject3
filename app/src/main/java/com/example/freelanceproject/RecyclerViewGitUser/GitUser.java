@@ -1,4 +1,4 @@
-package com.example.freelanceproject;
+package com.example.freelanceproject.RecyclerViewGitUser;
 
 public class GitUser {
     String login;

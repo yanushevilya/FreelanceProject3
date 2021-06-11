@@ -8,11 +8,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.SyncStateContract;
+
+import com.example.freelanceproject.RecyclerViewGitUser.GitUser;
+import com.example.freelanceproject.RecyclerViewGitUser.GitUserAdapter;
+import com.example.freelanceproject.RecyclerViewUserRepos.UserRepos;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -130,9 +132,10 @@ public class MainActivity extends AppCompatActivity {
         GitUserAdapter.OnGitUserClickListener gitUserClickListener = new GitUserAdapter.OnGitUserClickListener() {
             @Override
             public void onGitUserClick(GitUser gitUser, int position) {
-
+                System.out.println(gitUser.getLogin());
                 try {
-                    new UserQueryTask().execute(new URL("https://api.github.com/users/mojombo/repos"));
+                    userReposList.clear(); // очищаем List для RV репозитория юзера, перед тапом по новому юзеру
+                    new UserQueryTask().execute(new URL("https://api.github.com/users/" + gitUser.getLogin() + "/repos"));
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 }

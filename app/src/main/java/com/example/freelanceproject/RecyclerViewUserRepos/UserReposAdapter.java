@@ -1,4 +1,4 @@
-package com.example.freelanceproject;
+package com.example.freelanceproject.RecyclerViewUserRepos;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -7,6 +7,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.freelanceproject.R;
 
 import java.util.List;
 
@@ -18,7 +20,7 @@ public class UserReposAdapter extends RecyclerView.Adapter<UserReposAdapter.View
 
     // 3. в качестве параметров передаем Context - это активити, из которого вызывается адаптер
     // и в котором будет отображаться наш RecyclerView
-    UserReposAdapter(Context context, List<UserRepos> userReposList) {
+    public UserReposAdapter(Context context, List<UserRepos> userReposList) {
         // 4. инициализируем наши константы
         this.userReposList = userReposList;
         this.inflater = LayoutInflater.from(context);

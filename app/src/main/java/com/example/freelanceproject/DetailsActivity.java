@@ -4,17 +4,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.widget.TextView;
 
-import org.json.JSONArray;
-import org.json.JSONException;
+import com.example.freelanceproject.RecyclerViewUserRepos.UserRepos;
+import com.example.freelanceproject.RecyclerViewUserRepos.UserReposAdapter;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 
 import static com.example.freelanceproject.NetworkUtils.getResponseFromURL;
