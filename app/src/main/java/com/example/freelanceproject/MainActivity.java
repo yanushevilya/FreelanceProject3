@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         return userReposList;
     }
 
-    // поток для получения JSON про юзеров
+    // поток для получения JSON про ЮЗЕРОВ
     class GitQueryTask extends AsyncTask<URL, Void, String> {
 
         @Override
@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
                     GitUser gitUser = new GitUser();
                     gitUser.setLogin(login);
                     gitUser.setChangesCount(changesCount);
-                    saveToRealm(login, changesCount);
+                    saveGitUserToRealm(login, changesCount);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // поток для получения JSON про репозитории
+    // поток для получения JSON про РЕПОЗИТОРИИ
     class UserQueryTask extends AsyncTask<URL, Void, String> {
 
         @Override
@@ -110,8 +110,9 @@ public class MainActivity extends AppCompatActivity {
                 String repo = "";
                 for (int i = 0; i < jsonArray.length(); i++ ) {
                     repo = jsonArray.getJSONObject(i).get("html_url").toString();
-                    userReposList.add(new UserRepos(repo));
-                    System.out.println(repo);
+                    UserRepos userRepos = new UserRepos();
+                    userRepos.setRepo(repo);
+                    saveUserReposToRealm(repo);
                 }
 
             } catch (JSONException e) {
@@ -144,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
 //        }                                                   //del
     }
 
-    public void saveToRealm(String login, String changesCount) {
+    public void saveGitUserToRealm(String login, String changesCount) {
         RealmResults<GitUser> gitUsers = realm.where(GitUser.class).findAll(); // получаем всю БД по модели Contact
         try {
             realm.beginTransaction();
@@ -170,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
         listGitUser.clear();
         listGitUser.addAll(realmResults);
 
-        // помещаем наш List в адаптер для RecyclerView
+        // заполняет List для RV MainActivity и инициализирует RecyclerView
         if(realmResults.size() > 0) {
 //            contactAdapter.setArray(contactArrayList);
             recyclerViewGitUsers = findViewById(R.id.rv_gitUsers);
@@ -197,5 +198,29 @@ public class MainActivity extends AppCompatActivity {
             recyclerViewGitUsers.setAdapter(gitUserAdapter);
 
         }
+    }
+
+    public void saveUserReposToRealm(String repo) {
+        RealmResults<UserRepos> userRepos = realm.where(UserRepos.class).findAll(); // получаем всю БД по модели Contact
+        try {
+            realm.beginTransaction();
+            UserRepos dataUserRepos = new UserRepos();
+            dataUserRepos.setRepo(repo);
+            realm.copyToRealmOrUpdate(dataUserRepos); // обновляет БД по @PrimaryKey или добавляет, если по @PrimaryKey записи не найдено
+            realm.commitTransaction();
+        } catch (Exception e) {
+            if(realm.isInTransaction()) {
+                realm.cancelTransaction();
+            }
+            throw new RuntimeException(e);
+        }
+        getListUserRepos();
+    }
+
+    // заполняет List для RV DetailsActivity
+    public void getListUserRepos() {
+        RealmResults<UserRepos> realmResults = realm.where(UserRepos.class).sort("repo").findAll();
+        userReposList.clear();
+        userReposList.addAll(realmResults);
     }
 }

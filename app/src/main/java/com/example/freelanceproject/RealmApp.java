@@ -1,11 +1,11 @@
-package com.example.freelanceproject.RecyclerViewGitUser;
+package com.example.freelanceproject;
 
 import android.app.Application;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 
-public class GitUserRealmApp extends Application {
+public class RealmApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
