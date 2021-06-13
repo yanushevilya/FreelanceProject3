@@ -50,7 +50,6 @@ public class GitUserAdapter  extends RecyclerView.Adapter<GitUserAdapter.ViewHol
     public void onBindViewHolder(GitUserAdapter.ViewHolder holder, int position) {
         GitUser gitUser = gitUsers.get(position); // получает объект GitUser из List'а согласно переданной позиции
         // и берет из него данные для их присвоения элементам Holder'а
-        holder.idView.setText(gitUser.getId());
         holder.loginView.setText(gitUser.getLogin());
         holder.changesCountView.setText(gitUser.getChangesCount());
 
@@ -73,10 +72,9 @@ public class GitUserAdapter  extends RecyclerView.Adapter<GitUserAdapter.ViewHol
 
     // 1. создает Holder на основе view'шек из list_item.xml
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        final TextView idView, loginView, changesCountView;
+        final TextView loginView, changesCountView;
         ViewHolder(View view){
             super(view);
-            idView = (TextView)view.findViewById(R.id.tvIdUser);
             loginView = (TextView) view.findViewById(R.id.tvLoginUser);
             changesCountView = (TextView) view.findViewById(R.id.tvChangesCount);
         }

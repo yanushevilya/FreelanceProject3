@@ -21,9 +21,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import io.realm.Realm;
+import io.realm.RealmResults;
+
 import static com.example.freelanceproject.NetworkUtils.getResponseFromURL;
 
 public class MainActivity extends AppCompatActivity {
+
+    private Realm realm;
 
     private RecyclerView recyclerViewGitUsers;
     private GitUserAdapter gitUserAdapter;
@@ -35,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         return userReposList;
     }
 
-    // класс для запуска в отдельном потоке задачи подключения по URL и получения JSON
+    // поток для получения JSON про юзеров
     class GitQueryTask extends AsyncTask<URL, Void, String> {
 
         @Override
@@ -50,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
             return response;
         }
 
-        // здесь надо распарсить полученный в response JSON и поместить данные из него в наш массив listGitUser
+        // парсинг полученного в response JSON и поместить данные из него в наш Realm
         @Override
         protected void onPostExecute(String response) {
             try {
@@ -59,12 +64,14 @@ public class MainActivity extends AppCompatActivity {
                 // 2. считываем данные из полученного JSON и сразу записываем их в наш List для адаптера RecyclerView
                 for (int i = 0; i < jsonArray.length(); i++ ) {
                     String login = jsonArray.getJSONObject(i).get("login").toString();
-                    String id = jsonArray.getJSONObject(i).get("id").toString();
                     String changesCount = jsonArray.getJSONObject(i).get("node_id").toString();
                     // (сделать чтобы вместо записи в List, полученные из JSON данные записывались в БД)
                     // (а в отдельном методе, вызываемом после init(), сделать запись из БД в List)
                     // (таким образом данные будут всегда на устройстве, а по-возможности БД будет обновляться из Интернета)
-                    listGitUser.add(new GitUser(login, id, changesCount));
+                    GitUser gitUser = new GitUser();
+                    gitUser.setLogin(login);
+                    gitUser.setChangesCount(changesCount);
+                    saveToRealm(login, changesCount);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -72,8 +79,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // класс для запуска в отдельном потоке задачи подключения по URL и получения JSON
-    // (тап по Холдеру и получение репозиториев пользователя)
+    // поток для получения JSON про репозитории
     class UserQueryTask extends AsyncTask<URL, Void, String> {
 
         @Override
@@ -119,41 +125,79 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        realm = Realm.getDefaultInstance(); // получаем экземпляр БД
         init();
-
-        recyclerViewGitUsers = findViewById(R.id.rv_gitUsers);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        recyclerViewGitUsers.setLayoutManager(layoutManager);
-
-        recyclerViewGitUsers.setHasFixedSize(true);
-
-        // ОБРАБОТКА НАЖАТИЯ
-        // определяем слушателя нажатия элемента в списке
-        GitUserAdapter.OnGitUserClickListener gitUserClickListener = new GitUserAdapter.OnGitUserClickListener() {
-            @Override
-            public void onGitUserClick(GitUser gitUser, int position) {
-                System.out.println(gitUser.getLogin());
-                try {
-                    userReposList.clear(); // очищаем List для RV репозитория юзера, перед тапом по новому юзеру
-                    new UserQueryTask().execute(new URL("https://api.github.com/users/" + gitUser.getLogin() + "/repos"));
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
-
-        // помещаем наш List в адаптер для RecyclerView
-        gitUserAdapter = new GitUserAdapter(this, listGitUser, gitUserClickListener); //
-        recyclerViewGitUsers.setAdapter(gitUserAdapter);
     }
 
     public void init() {
+        // ??? - ВЫЗОВ МЕТОДА, КОТОРЫЙ ЧИТАЕТ ПУШ С FCM ОБ ИЗМЕНЕНИЯХ В РЕПОЗИТОРИЯХ
+        // IF - ЕСЛИ ЕСТЬ ИЗМЕНЕНИЯ, ТО ВЫЗЫВАЕМ GitQueryTask()-->saveToRealm() (ЧТОБЫ ПОЛУЧИТЬ НОВЫЙ json и распарсить его в REALM)
+        // ЕСЛИ НЕТ ИЗМЕНЕНИЙ, ТО ПРОСТО ЗАПУСКАЕМ getListGitUsers() ДЛЯ ИНИЦИАЛИЗАЦИИ RecyclerView
+        if (listGitUser.size()>0) {                         //del - добавить сюда МЕТОД вместо IF
+            getListGitUsers();                              //del
+        } else {                                            //del
+            try {                                           //del
+                new GitQueryTask().execute(new URL(url));   //del
+            } catch (MalformedURLException e) {             //del
+                e.printStackTrace();                        //del
+            }                                               //del
+        }                                                   //del
+    }
 
+    public void saveToRealm(String login, String changesCount) {
+        RealmResults<GitUser> gitUsers = realm.where(GitUser.class).findAll(); // получаем всю БД по модели Contact
         try {
-            new GitQueryTask().execute(new URL(url));
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
+            realm.beginTransaction();
+
+            // написать условие, которое проверяет есть ли запись с таким логином в БД,
+            // если есть, то переписать ее (а не добавлять)
+            GitUser dataGitUser = new GitUser();
+            dataGitUser.setLogin(login);
+            dataGitUser.setChangesCount(changesCount);
+            realm.copyToRealm(dataGitUser);
+
+            realm.commitTransaction();
+        } catch (Exception e) {
+            if(realm.isInTransaction()) {
+                realm.cancelTransaction();
+            }
+            throw new RuntimeException(e);
+        }
+//        listGitUser.clear();
+        getListGitUsers();
+    }
+
+    public void getListGitUsers() {
+        RealmResults<GitUser> realmResults = realm.where(GitUser.class).sort("login").findAll();
+        listGitUser.clear();
+        listGitUser.addAll(realmResults);
+
+        // помещаем наш List в адаптер для RecyclerView
+        if(realmResults.size() > 0) {
+//            contactAdapter.setArray(contactArrayList);
+            recyclerViewGitUsers = findViewById(R.id.rv_gitUsers);
+            LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+            recyclerViewGitUsers.setLayoutManager(layoutManager);
+            recyclerViewGitUsers.setHasFixedSize(true);
+
+            // ОБРАБОТКА НАЖАТИЯ
+            // определяем слушателя нажатия элемента в списке
+            GitUserAdapter.OnGitUserClickListener gitUserClickListener = new GitUserAdapter.OnGitUserClickListener() {
+                @Override
+                public void onGitUserClick(GitUser gitUser, int position) {
+                    System.out.println(gitUser.getLogin());
+                    try {
+                        userReposList.clear(); // очищаем List для RV репозитория юзера, перед тапом по новому юзеру
+                        new UserQueryTask().execute(new URL("https://api.github.com/users/" + gitUser.getLogin() + "/repos"));
+                    } catch (MalformedURLException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+
+            gitUserAdapter = new GitUserAdapter(this, listGitUser, gitUserClickListener); //
+            recyclerViewGitUsers.setAdapter(gitUserAdapter);
+
         }
     }
 }
