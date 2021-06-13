@@ -1,8 +1,10 @@
 package com.example.freelanceproject.RecyclerViewGitUser;
 
 import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 
 public class GitUser extends RealmObject {
+    @PrimaryKey
     String login;
     String changesCount;
 

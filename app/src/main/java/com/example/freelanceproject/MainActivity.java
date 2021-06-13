@@ -133,28 +133,26 @@ public class MainActivity extends AppCompatActivity {
         // ??? - ВЫЗОВ МЕТОДА, КОТОРЫЙ ЧИТАЕТ ПУШ С FCM ОБ ИЗМЕНЕНИЯХ В РЕПОЗИТОРИЯХ
         // IF - ЕСЛИ ЕСТЬ ИЗМЕНЕНИЯ, ТО ВЫЗЫВАЕМ GitQueryTask()-->saveToRealm() (ЧТОБЫ ПОЛУЧИТЬ НОВЫЙ json и распарсить его в REALM)
         // ЕСЛИ НЕТ ИЗМЕНЕНИЙ, ТО ПРОСТО ЗАПУСКАЕМ getListGitUsers() ДЛЯ ИНИЦИАЛИЗАЦИИ RecyclerView
-        if (listGitUser.size()>0) {                         //del - добавить сюда МЕТОД вместо IF
-            getListGitUsers();                              //del
-        } else {                                            //del
-            try {                                           //del
-                new GitQueryTask().execute(new URL(url));   //del
-            } catch (MalformedURLException e) {             //del
-                e.printStackTrace();                        //del
-            }                                               //del
-        }                                                   //del
+//        if (listGitUser.size()>0) {                         //del - добавить сюда МЕТОД вместо IF
+//            getListGitUsers();                              //del
+//        } else {                                            //del
+            try {
+                new GitQueryTask().execute(new URL(url));
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+//        }                                                   //del
     }
 
     public void saveToRealm(String login, String changesCount) {
         RealmResults<GitUser> gitUsers = realm.where(GitUser.class).findAll(); // получаем всю БД по модели Contact
         try {
             realm.beginTransaction();
-
-            // написать условие, которое проверяет есть ли запись с таким логином в БД,
-            // если есть, то переписать ее (а не добавлять)
             GitUser dataGitUser = new GitUser();
             dataGitUser.setLogin(login);
             dataGitUser.setChangesCount(changesCount);
-            realm.copyToRealm(dataGitUser);
+//            realm.copyToRealm(dataGitUser);       // просто добавляет данные в БД
+            realm.copyToRealmOrUpdate(dataGitUser); // обновляет БД по @PrimaryKey или добавляет, если по @PrimaryKey записи не найдено
 
             realm.commitTransaction();
         } catch (Exception e) {
